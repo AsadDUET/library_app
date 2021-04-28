@@ -1,0 +1,157 @@
+#:kivy 2.0.0
+<HomeScreen>:
+    MDGridLayout:
+        cols: 1
+        spacing: dp(10)
+        MDToolbar:
+            id: toolbar
+            title: ''
+            height: dp(30)
+            # md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+            left_action_items: [["dots-vertical", lambda x: None]]
+            pos_hint: {"top": 1}
+        MDLabel:
+            id: welcome
+            text: 'Welcome to\nLibrary Management App'
+            halign: "center"
+            font_style: 'H3'
+
+        
+        MDGridLayout:
+            cols: 3
+            size_hint_y: 0.3
+            padding: (10,10)
+            spacing: dp(10)
+            MDRaisedButton:
+                text: 'Enrole'
+                size_hint: 1, 1
+                # on_press: root.go_enrole_screen()
+                on_release: root.go_enrole_screen()
+                # on_state:
+                #     print("my current state is {}".format(self.state))
+            MDRaisedButton:
+                text: 'Check'
+                size_hint: 1, 1
+                on_release: root.go_check_screen()
+            MDRaisedButton:
+                text: 'Take/Back'
+                size_hint: 1, 1
+                on_release: root.go_exchange_screen()
+<EnroleScreen>:
+    MDGridLayout:
+        cols: 1
+        spacing: dp(10)
+        MDToolbar:
+            id: toolbar
+            title: ''
+            height: dp(30)
+            # md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+            left_action_items: [["dots-vertical", lambda x: None]]
+            pos_hint: {"top": 1}
+<ExchangeScreen>:
+    MDGridLayout:
+        cols: 1
+        spacing: dp(10)
+        MDToolbar:
+            id: toolbar
+            title: ''
+            height: dp(30)
+            # md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+            left_action_items: [["arrow-left", lambda x: root.back()]]
+            pos_hint: {"top": 1}
+        Image:
+            id: preview
+            source: ''
+            allow_stretch: True
+<BookListScreen>:
+    GridLayout:
+        cols: 1
+        MDToolbar:
+            id: toolbar
+            title: ''
+            height: dp(30)
+            # md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+            # left_action_items: [["arrow-left", lambda x: root.back()]]
+            pos_hint: {"top": 1}
+        MDLabel:
+            text: "Book List"
+            font_style: 'H5'
+            size_hint_y:.1
+            halign: "center"
+        GridLayout:
+            cols: 1
+            id: bookTable
+<StudentListScreen>:
+    GridLayout:
+        cols: 1
+        MDToolbar:
+            id: toolbar
+            title: ''
+            height: dp(30)
+            # md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+            # left_action_items: [["arrow-left", lambda x: root.back()]]
+            pos_hint: {"top": 1}
+        MDLabel:
+            text: "Student List"
+            font_style: 'H5'
+            size_hint_y:.1
+            halign: "center"
+        GridLayout:
+            cols: 1
+            id: bookTable
+# <ExchangesListScreen>:
+#     GridLayout:
+#         cols: 1
+#         MDToolbar:
+#             id: toolbar
+#             title: ''
+#             height: dp(30)
+#             # md_bg_color: app.theme_cls.primary_color
+#             elevation: 10
+#             # left_action_items: [["arrow-left", lambda x: root.back()]]
+#             pos_hint: {"top": 1}
+#         MDLabel:
+#             text: "Exchange List"
+#             font_style: 'H5'
+#             size_hint_y:.1
+#             halign: "center"
+#         GridLayout:
+#             cols: 1
+#             id: bookTable
+<ListSelectScreen>:
+    GridLayout:
+        cols: 1
+        MDToolbar:
+            id: toolbar
+            title: ''
+            height: dp(30)
+            # md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+            left_action_items: [["arrow-left", lambda x: root.back()]]
+            pos_hint: {"top": 1}
+        MDLabel:
+            text: "Select List"
+            font_style: 'H5'
+            size_hint_y:.1
+            halign: "center"
+        GridLayout:
+            cols:3
+            spacing: dp(10)
+            MDRaisedButton:
+                text: 'BookList'
+                size_hint: 1, 1
+                on_release: root.go_book_screen()
+            MDRaisedButton:
+                text: 'Student List'
+                size_hint: 1, 1
+                on_release: root.go_student_screen()
+            MDRaisedButton:
+                text: 'Exchanges'
+                size_hint: 1, 1
+                on_release: root.go_exchange_screen()
+            
