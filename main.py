@@ -11,19 +11,20 @@ from kivymd.uix.list import MDList
 from kivymd.uix.gridlayout import GridLayout
 from kivymd.uix.label import MDLabel
 from kivy.metrics import dp
-
+######
+# OCR
+######
 import pytesseract
 pytesseract.pytesseract.tesseract_cmd="/usr/bin/tesseract"
 
-import sqlite3
-con = sqlite3.connect('library_data.db')
-import scan_qr as qr
 ######
 #DATABASE
 ######
 import sqlite3
 con = sqlite3.connect('library_data.db')
-
+import scan_qr as qr
+# import sqlite3
+# con = sqlite3.connect('library_data.db')
 cur = con.cursor()
 
 # cur.execute('''DROP TABLE exchange''')
@@ -87,9 +88,21 @@ class EnroleScreen(MDScreen):
     def on_pre_leave(self):
         Clock.unschedule(self.this_loop)
         print('Leaving '+self.name)
-    
+    def back(self):
+        my_app.screen_manager.current='home_screen'
+    def submit(self):
+        if(self.ids['fID'].text!="" and self.ids['stdID'].text!=""):
+            try:
+                cur.execute(f"INSERT INTO users VALUES ('{self.ids['stdName'].text}','{self.ids['fID'].text}','{self.ids['stdID'].text}')")
+                con.commit()
+            except Exception as e:
+                print(e," User id already exists. ",)
+        else:
+            pass
+        
     def loop(self,dt):
         pass
+
 class ExchangeScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -113,7 +126,8 @@ class ExchangeScreen(MDScreen):
         Clock.unschedule(self.this_loop)
         self.cap.release()
         print('Leaving '+self.name)
-    
+    def submit(self):
+        pass
     def loop(self,dt):
         ret, frame = self.cap.read()
         frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
@@ -133,6 +147,7 @@ class ExchangeScreen(MDScreen):
         image_texture= Texture.create(size=(frame.shape[1],frame.shape[0]),colorfmt='rgb')
         image_texture.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
         self.ids['preview'].texture =image_texture
+
 class BookListScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -186,6 +201,7 @@ class BookListScreen(MDScreen):
         pass
         # sleep(5)
         # self.back()
+
 class StudentListScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -239,6 +255,61 @@ class StudentListScreen(MDScreen):
         pass
         # sleep(5)
         # self.back()
+
+class ExchangeListScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.name='exchange_list_screen'
+        
+    def on_enter(self):
+        print('Entered '+self.name)
+        self.this_loop=Clock.schedule_interval(self.loop,0)
+        try:
+            book_ids=[]
+            borrowed=[]
+            row_datas=[]
+            for row in cur.execute('SELECT * FROM books ' ):
+                book_ids.append(row[1])
+            print(book_ids)
+            for id in book_ids:
+                borrowed.append(cur.execute(f'SELECT COUNT(*) FROM exchange WHERE book_id={id} AND status=1').fetchall()[0][0])
+            print(borrowed)
+            print("Name","ID", "Borrowed","Available","Total")
+            for n, row in enumerate(cur.execute('SELECT * FROM books ')):
+                row_datas.append((n+1,row[0],row[1], borrowed[n], row[2]-borrowed[n], row[2]))
+                print(n+1,row[0],row[1], borrowed[n], row[2]-borrowed[n], row[2])
+            print(row_datas)
+            self.data_table = MDDataTable(pos_hint={'center_x': 0.5, 'center_y': 0.5},
+                                    size_hint=(0.9, 0.9),
+                                    #  check=True,
+                                    rows_num=len(row_datas),
+                                    column_data=[
+                                        ("No.", dp(15)),
+                                        ("Name", dp(50)),
+                                        ("ID", dp(20)),
+                                        ("Borrowed", dp(20)),
+                                        ("Available", dp(20)),
+                                        ("Total", dp(20))
+                                    ],
+                                    row_data=row_datas
+                                    )
+            self.ids["bookTable"].add_widget(self.data_table)
+            self.data_table.bind(on_row_press=self.back)
+        except Exception as e:
+            print(e, "Table or data Not Found")
+            
+    def back(self,a,b):
+        my_app.screen_manager.current='list_select_screen'
+    def on_pre_leave(self):
+        Clock.unschedule(self.this_loop)
+        self.ids["bookTable"].remove_widget(self.data_table)
+        print('Leaving '+self.name)
+    
+    def loop(self,dt):
+        pass
+        # sleep(5)
+        # self.back()
+
 class ListSelectScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -256,10 +327,13 @@ class ListSelectScreen(MDScreen):
         my_app.screen_manager.current='book_list_screen'
     def go_student_screen(self):
         my_app.screen_manager.current='student_list_screen'
+    def go_exchange_list_screen(self):
+        my_app.screen_manager.current='exchange_list_screen'
     def loop(self,dt):
         pass
         # sleep(5)
         # self.back()
+
 class LibraryApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -285,6 +359,9 @@ class LibraryApp(MDApp):
 
         self.list_select_screen = ListSelectScreen()
         self.screen_manager.add_widget(self.list_select_screen)
+
+        self.exchange_select_screen = ExchangeListScreen()
+        self.screen_manager.add_widget(self.exchange_select_screen)
 
 
         # self.atd_complete_page = AtdCompletePage()

@@ -35,21 +35,51 @@
                 size_hint: 1, 1
                 on_release: root.go_check_screen()
             MDRaisedButton:
-                text: 'Take/Back'
+                text: 'Take/Return'
                 size_hint: 1, 1
                 on_release: root.go_exchange_screen()
 <EnroleScreen>:
     MDGridLayout:
         cols: 1
         spacing: dp(10)
+        # padding: (10,10)
         MDToolbar:
             id: toolbar
             title: ''
             height: dp(30)
             # md_bg_color: app.theme_cls.primary_color
             elevation: 10
-            left_action_items: [["dots-vertical", lambda x: None]]
+            left_action_items: [["arrow-left", lambda x: root.back()]]
             pos_hint: {"top": 1}
+        MDGridLayout:
+            cols: 1
+            spacing: dp(10)
+            padding: (10,10)
+            MDLabel:
+                text: "Student Enrole"
+                font_style: 'H5'
+                size_hint_y:.3
+                halign: "center"
+            # MDLabel:
+            #     text: "Student ID"
+            #     halign: "left"
+            #     size_hint_y:.1
+            MDTextField:
+                id: stdName
+                hint_text: "Student Name"
+            MDTextField:
+                id: stdID
+                hint_text: "Student ID"
+            MDTextField:
+                id: fID
+                hint_text: "Finger Print ID"
+            MDRaisedButton:
+                text: 'Submit'
+                size_hint: 1, 1
+                size_hint_y:.1
+                # on_press: root.go_enrole_screen()
+                on_release: root.submit()
+            
 <ExchangeScreen>:
     MDGridLayout:
         cols: 1
@@ -62,10 +92,42 @@
             elevation: 10
             left_action_items: [["arrow-left", lambda x: root.back()]]
             pos_hint: {"top": 1}
-        Image:
-            id: preview
-            source: ''
-            allow_stretch: True
+        MDGridLayout:
+            cols: 1
+            spacing: dp(10)
+            padding: (10,10)
+            MDLabel:
+                text: "Submit after complete"
+                font_style: 'H5'
+                size_hint_y:.3
+                halign: "center"
+            MDGridLayout:
+                cols: 2
+                spacing: dp(10)
+                padding: (10,10)
+                MDGridLayout:
+                    cols: 1
+                    spacing: dp(10)
+                    MDTextField:
+                        id: stdName
+                        hint_text: "Book ID"
+                    MDTextField:
+                        id: stdID
+                        hint_text: "Student ID"
+                    MDTextField:
+                        id: fID
+                        hint_text: "Finger Print ID"
+                MDGridLayout:
+                    cols: 1
+                    spacing: dp(10)
+                    Image:
+                        id: preview
+                        source: ''
+                        allow_stretch: True
+            MDRaisedButton:
+                text: 'Submit'
+                size_hint: 1,0.2
+                on_release: root.submit()
 <BookListScreen>:
     GridLayout:
         cols: 1
@@ -104,25 +166,27 @@
         GridLayout:
             cols: 1
             id: bookTable
-# <ExchangesListScreen>:
-#     GridLayout:
-#         cols: 1
-#         MDToolbar:
-#             id: toolbar
-#             title: ''
-#             height: dp(30)
-#             # md_bg_color: app.theme_cls.primary_color
-#             elevation: 10
-#             # left_action_items: [["arrow-left", lambda x: root.back()]]
-#             pos_hint: {"top": 1}
-#         MDLabel:
-#             text: "Exchange List"
-#             font_style: 'H5'
-#             size_hint_y:.1
-#             halign: "center"
-#         GridLayout:
-#             cols: 1
-#             id: bookTable
+
+<ExchangeListScreen>:
+    GridLayout:
+        cols: 1
+        MDToolbar:
+            id: toolbar
+            title: ''
+            height: dp(30)
+            # md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+            # left_action_items: [["arrow-left", lambda x: root.back()]]
+            pos_hint: {"top": 1}
+        MDLabel:
+            text: "Exchange List"
+            font_style: 'H5'
+            size_hint_y:.1
+            halign: "center"
+        GridLayout:
+            cols: 1
+            id: bookTable
+
 <ListSelectScreen>:
     GridLayout:
         cols: 1
@@ -134,24 +198,27 @@
             elevation: 10
             left_action_items: [["arrow-left", lambda x: root.back()]]
             pos_hint: {"top": 1}
-        MDLabel:
-            text: "Select List"
-            font_style: 'H5'
-            size_hint_y:.1
-            halign: "center"
         GridLayout:
-            cols:3
-            spacing: dp(10)
-            MDRaisedButton:
-                text: 'BookList'
-                size_hint: 1, 1
-                on_release: root.go_book_screen()
-            MDRaisedButton:
-                text: 'Student List'
-                size_hint: 1, 1
-                on_release: root.go_student_screen()
-            MDRaisedButton:
-                text: 'Exchanges'
-                size_hint: 1, 1
-                on_release: root.go_exchange_screen()
-            
+            cols: 1
+            padding: (10,10)
+            MDLabel:
+                text: "Select List"
+                font_style: 'H5'
+                # size_hint_y:.1
+                halign: "center"
+            GridLayout:
+                cols:3
+                spacing: dp(10)
+                size_hint_y: 0.1
+                MDRaisedButton:
+                    text: 'BookList'
+                    size_hint: 1, 1
+                    on_release: root.go_book_screen()
+                MDRaisedButton:
+                    text: 'Student List'
+                    size_hint: 1, 1
+                    on_release: root.go_student_screen()
+                MDRaisedButton:
+                    text: 'Exchanges'
+                    size_hint: 1, 1
+                    on_release: root.go_exchange_list_screen()

@@ -22,7 +22,7 @@ except Exception as e:
 
 ## Insert Book
 try:
-    cur.execute("INSERT INTO books VALUES ('Math','1',25)")
+    cur.execute("INSERT INTO books VALUES ('English','3',25)")
 except Exception as e:
     print(e," Book id already exists. ",)
 
@@ -31,7 +31,6 @@ try:
     cur.execute("INSERT INTO exchange VALUES ('0','123456',1)")
 except Exception as e:
     print(e, "Multiple copy not allowed")
-
 
 ##UPDATE exchange
 try:
@@ -83,12 +82,12 @@ except Exception as e:
     print(e, "Table or data Not Found")
 
 
-# ## All Student List
-# try:
-#     for row in cur.execute('SELECT * FROM users ' ):
-#         print(row)
-# except Exception as e:
-#     print(e, "Table or data Not Found")
+## All Student List
+try:
+    for row in cur.execute('SELECT * FROM users ' ):
+        print(row)
+except Exception as e:
+    print(e, "Table or data Not Found")
 # print(cur.execute('SELECT COUNT(*) FROM exchange WHERE status=1').fetchall()[0][0])
 
 con.close()
