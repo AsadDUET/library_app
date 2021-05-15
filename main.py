@@ -11,6 +11,9 @@ from kivymd.uix.list import MDList
 from kivymd.uix.gridlayout import GridLayout
 from kivymd.uix.label import MDLabel
 from kivy.metrics import dp
+from datetime import datetime
+from picamera.array import PiRGBArray
+from picamera import PiCamera
 ######
 # OCR
 ######
