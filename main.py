@@ -127,7 +127,18 @@ class ExchangeScreen(MDScreen):
         self.cap.release()
         print('Leaving '+self.name)
     def submit(self):
-        pass
+        try:
+            cur.execute(f"INSERT INTO exchange VALUES ('{self.ids['bookID'].text}','{self.ids['stdID'].text}',1)")
+        except Exception as e:
+            print(e, "Multiple copy not allowed")
+
+            ##UPDATE exchange
+            try:
+                cur.execute(f"UPDATE exchange SET status=0 WHERE book_id={self.ids['bookID'].text} AND std_id={self.ids['stdID'].text}")
+            except Exception as e:
+                print(e)
+                cur.execute(f"DELETE FROM  exchange  WHERE book_id={self.ids['bookID'].text} AND std_id={self.ids['stdID'].text} AND status=1")
+        con.commit()
     def loop(self,dt):
         ret, frame = self.cap.read()
         frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
@@ -211,19 +222,19 @@ class StudentListScreen(MDScreen):
         print('Entered '+self.name)
         self.this_loop=Clock.schedule_interval(self.loop,0)
         try:
-            book_ids=[]
+            user_ids=[]
             borrowed=[]
             row_datas=[]
-            for row in cur.execute('SELECT * FROM books ' ):
-                book_ids.append(row[1])
-            print(book_ids)
-            for id in book_ids:
-                borrowed.append(cur.execute(f'SELECT COUNT(*) FROM exchange WHERE book_id={id} AND status=1').fetchall()[0][0])
+            for row in cur.execute('SELECT * FROM users ' ):
+                user_ids.append(row[2])
+            print(user_ids)
+            for id in user_ids:
+                borrowed.append(cur.execute(f'SELECT COUNT(*) FROM exchange WHERE std_id={id} AND status=1').fetchall()[0][0])
             print(borrowed)
-            print("Name","ID", "Borrowed","Available","Total")
-            for n, row in enumerate(cur.execute('SELECT * FROM books ')):
-                row_datas.append((n+1,row[0],row[1], borrowed[n], row[2]-borrowed[n], row[2]))
-                print(n+1,row[0],row[1], borrowed[n], row[2]-borrowed[n], row[2])
+            print("Name","ID", "Borrowed")
+            for n, row in enumerate(cur.execute('SELECT * FROM users ')):
+                row_datas.append((n+1,row[0],row[1], borrowed[n]))
+                print(n+1,row[0],row[1], borrowed[n])
             print(row_datas)
             self.data_table = MDDataTable(pos_hint={'center_x': 0.5, 'center_y': 0.5},
                                     size_hint=(0.9, 0.9),
@@ -233,9 +244,7 @@ class StudentListScreen(MDScreen):
                                         ("No.", dp(15)),
                                         ("Name", dp(50)),
                                         ("ID", dp(20)),
-                                        ("Borrowed", dp(20)),
-                                        ("Available", dp(20)),
-                                        ("Total", dp(20))
+                                        ("Borrowed", dp(20))
                                     ],
                                     row_data=row_datas
                                     )
@@ -265,19 +274,19 @@ class ExchangeListScreen(MDScreen):
         print('Entered '+self.name)
         self.this_loop=Clock.schedule_interval(self.loop,0)
         try:
-            book_ids=[]
-            borrowed=[]
+            # book_ids=[]
+            # borrowed=[]
             row_datas=[]
-            for row in cur.execute('SELECT * FROM books ' ):
-                book_ids.append(row[1])
-            print(book_ids)
-            for id in book_ids:
-                borrowed.append(cur.execute(f'SELECT COUNT(*) FROM exchange WHERE book_id={id} AND status=1').fetchall()[0][0])
-            print(borrowed)
-            print("Name","ID", "Borrowed","Available","Total")
-            for n, row in enumerate(cur.execute('SELECT * FROM books ')):
-                row_datas.append((n+1,row[0],row[1], borrowed[n], row[2]-borrowed[n], row[2]))
-                print(n+1,row[0],row[1], borrowed[n], row[2]-borrowed[n], row[2])
+            # for row in cur.execute('SELECT * FROM books ' ):
+            #     book_ids.append(row[1])
+            # print(book_ids)
+            # for id in book_ids:
+            #     borrowed.append(cur.execute(f'SELECT COUNT(*) FROM exchange WHERE book_id={id} AND status=1').fetchall()[0][0])
+            # print(borrowed)
+            print("Book ID","Std.ID", "Status")
+            for n, row in enumerate(cur.execute('SELECT * FROM exchange ')):
+                row_datas.append((n+1,row[0],row[1], row[2]))
+                print(n+1,row[0],row[1], row[2])
             print(row_datas)
             self.data_table = MDDataTable(pos_hint={'center_x': 0.5, 'center_y': 0.5},
                                     size_hint=(0.9, 0.9),
@@ -285,11 +294,9 @@ class ExchangeListScreen(MDScreen):
                                     rows_num=len(row_datas),
                                     column_data=[
                                         ("No.", dp(15)),
-                                        ("Name", dp(50)),
-                                        ("ID", dp(20)),
-                                        ("Borrowed", dp(20)),
-                                        ("Available", dp(20)),
-                                        ("Total", dp(20))
+                                        ("Book ID", dp(50)),
+                                        ("Std.ID", dp(20)),
+                                        ("Status", dp(20))
                                     ],
                                     row_data=row_datas
                                     )
