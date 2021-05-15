@@ -14,8 +14,8 @@ from kivy.metrics import dp
 ######
 # OCR
 ######
-import pytesseract
-pytesseract.pytesseract.tesseract_cmd="/usr/bin/tesseract"
+# import pytesseract
+# pytesseract.pytesseract.tesseract_cmd="/usr/bin/tesseract"
 
 ######
 #DATABASE
