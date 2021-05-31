@@ -9,7 +9,7 @@
             height: dp(30)
             # md_bg_color: app.theme_cls.primary_color
             elevation: 10
-            left_action_items: [["dots-vertical", lambda x: None]]
+            left_action_items: [["arrow-left", lambda x: root.close_app()]]
             pos_hint: {"top": 1}
         MDLabel:
             id: welcome
@@ -19,12 +19,18 @@
 
         
         MDGridLayout:
-            cols: 3
+            cols: 4
             size_hint_y: 0.3
             padding: (10,10)
             spacing: dp(10)
             MDRaisedButton:
+                text: 'Close'
+                font_size: "36sp"
+                size_hint: 1, 1
+                on_release: root.close_app()
+            MDRaisedButton:
                 text: 'Enrole'
+                font_size: "36sp"
                 size_hint: 1, 1
                 # on_press: root.go_enrole_screen()
                 on_release: root.go_enrole_screen()
@@ -32,10 +38,12 @@
                 #     print("my current state is {}".format(self.state))
             MDRaisedButton:
                 text: 'Check'
+                font_size: "36sp"
                 size_hint: 1, 1
                 on_release: root.go_check_screen()
             MDRaisedButton:
-                text: 'Take/Return'
+                text: 'Take/Back'
+                font_size: "36sp"
                 size_hint: 1, 1
                 on_release: root.go_exchange_screen()
 <EnroleScreen>:
@@ -57,7 +65,7 @@
             padding: (10,10)
             MDLabel:
                 text: "Student Enrole"
-                font_style: 'H5'
+                font_style: 'H3'
                 size_hint_y:.3
                 halign: "center"
             # MDLabel:
@@ -67,18 +75,42 @@
             MDTextField:
                 id: stdName
                 hint_text: "Student Name"
+                font_size: "36sp"
             MDTextField:
                 id: stdID
                 hint_text: "Student ID"
+                font_size: "36sp"
             MDTextField:
                 id: fID
                 hint_text: "Finger Print ID"
-            MDRaisedButton:
-                text: 'Submit'
-                size_hint: 1, 1
+                font_size: "36sp"
+            MDGridLayout:
+                cols: 4
+                spacing: dp(10)
+                padding: (10,10)
                 size_hint_y:.1
-                # on_press: root.go_enrole_screen()
-                on_release: root.submit()
+                MDRaisedButton:
+                    text: 'Back'
+                    font_size: "36sp"
+                    size_hint: 1, 1
+                    # on_press: root.go_enrole_screen()
+                    on_release: root.back()
+                MDRaisedButton:
+                    text: 'Fid +'
+                    font_size: "36sp"
+                    size_hint: 1, 1
+                    on_release: root.fidPlus()
+                MDRaisedButton:
+                    text: 'Fid -'
+                    font_size: "36sp"
+                    size_hint: 1, 1
+                    on_release: root.fidMinus()
+                MDRaisedButton:
+                    text: 'Submit'
+                    font_size: "36sp"
+                    size_hint: 1, 1
+                    # on_press: root.go_enrole_screen()
+                    on_release: root.submit()
             
 <ExchangeScreen>:
     MDGridLayout:
@@ -98,7 +130,7 @@
             padding: (10,10)
             MDLabel:
                 text: "Submit after complete"
-                font_style: 'H5'
+                font_style: 'H3'
                 size_hint_y:.3
                 halign: "center"
             MDGridLayout:
@@ -111,12 +143,15 @@
                     MDTextField:
                         id: bookID
                         hint_text: "Book ID"
+                        font_size: "36sp"
                     MDTextField:
                         id: stdID
                         hint_text: "Student ID"
+                        font_size: "36sp"
                     MDTextField:
                         id: fID
                         hint_text: "Finger Print ID"
+                        font_size: "36sp"
                 MDGridLayout:
                     cols: 1
                     spacing: dp(10)
@@ -124,10 +159,19 @@
                         id: preview
                         source: ''
                         allow_stretch: True
-            MDRaisedButton:
-                text: 'Submit'
-                size_hint: 1,0.2
-                on_release: root.submit()
+            MDGridLayout:
+                cols: 1
+                spacing: dp(10)
+                MDRaisedButton:
+                    text: 'Submit'
+                    font_size: "36sp"
+                    size_hint: 1,0.2
+                    on_release: root.submit()
+                MDRaisedButton:
+                    text: 'Get StdID'
+                    font_size: "36sp"
+                    size_hint: 1,0.2
+                    on_release: root.get_id()
 <BookListScreen>:
     GridLayout:
         cols: 1
@@ -141,7 +185,7 @@
             pos_hint: {"top": 1}
         MDLabel:
             text: "Book List"
-            font_style: 'H5'
+            font_style: 'H3'
             size_hint_y:.1
             halign: "center"
         GridLayout:
@@ -160,7 +204,7 @@
             pos_hint: {"top": 1}
         MDLabel:
             text: "Student List"
-            font_style: 'H5'
+            font_style: 'H3'
             size_hint_y:.1
             halign: "center"
         GridLayout:
@@ -180,7 +224,7 @@
             pos_hint: {"top": 1}
         MDLabel:
             text: "Exchange List"
-            font_style: 'H5'
+            font_style: 'H3'
             size_hint_y:.1
             halign: "center"
         GridLayout:
@@ -203,7 +247,7 @@
             padding: (10,10)
             MDLabel:
                 text: "Select List"
-                font_style: 'H5'
+                font_style: 'H3'
                 # size_hint_y:.1
                 halign: "center"
             GridLayout:
@@ -212,13 +256,21 @@
                 size_hint_y: 0.1
                 MDRaisedButton:
                     text: 'BookList'
+                    font_size: "36sp"
+                    size_hint: 1, 1
+                    on_release: root.back()
+                MDRaisedButton:
+                    text: 'BookList'
+                    font_size: "36sp"
                     size_hint: 1, 1
                     on_release: root.go_book_screen()
                 MDRaisedButton:
-                    text: 'Student List'
+                    text: 'Std List'
+                    font_size: "36sp"
                     size_hint: 1, 1
                     on_release: root.go_student_screen()
                 MDRaisedButton:
                     text: 'Exchanges'
+                    font_size: "36sp"
                     size_hint: 1, 1
                     on_release: root.go_exchange_list_screen()

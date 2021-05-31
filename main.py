@@ -11,13 +11,20 @@ from kivymd.uix.list import MDList
 from kivymd.uix.gridlayout import GridLayout
 from kivymd.uix.label import MDLabel
 from kivy.metrics import dp
+from kivy.core.window import Window
 from datetime import datetime
 from picamera.array import PiRGBArray
 from picamera import PiCamera
+import re
+from gpiozero import Button
+from signal import pause
+
+Window.size = (800, 480)
+Window.fullscreen=True
 ######
 # OCR
 ######
-# import pytesseract
+import pytesseract
 # pytesseract.pytesseract.tesseract_cmd="/usr/bin/tesseract"
 
 ######
@@ -46,23 +53,39 @@ con.commit()
 ######
 import cv2
 
+camera = PiCamera()
+camera.resolution = (1024, 1024)
+camera.rotation = 90
+camera.framerate = 32
+rawCapture = PiRGBArray(camera, size=(1024, 1024))
+rawCapture.truncate()
+
 #########
 # Globa Variables
 #########
-
+btn1 = Button(26)
+btn2 = Button(6)
+btn3 = Button(13)
+btn4 = Button(19)
 class HomeScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name='home_screen'
         self.home_loop=None
 
+    def say_hello():
+        print("Hello!")
+
     def close_app(self):
-        print(self)
+        my_app.get_running_app().stop()
 
     def on_enter(self):
         print('Entered '+self.name)
+        btn1.when_pressed = self.close_app
+        btn2.when_pressed = self.go_enrole_screen
+        btn3.when_pressed = self.go_check_screen
+        btn4.when_pressed = self.go_exchange_screen
         self.home_loop=Clock.schedule_interval(self.loop,0)
-
     def on_pre_leave(self):
         Clock.unschedule(self.home_loop)
         print('Leaving '+self.name)
@@ -78,16 +101,33 @@ class HomeScreen(MDScreen):
 
     def loop(self,dt):
         pass
+    
+    
+    
+
+    
+    # pause()
+    
         
 class EnroleScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name='enrole_screen'
+        self.i=0
     
     def on_enter(self):
-        self.this_loop=Clock.schedule_interval(self.loop,0)
         print('Entered '+self.name)
-
+        btn1.when_pressed = self.back
+        btn2.when_pressed = self.fidPlus
+        btn3.when_pressed = self.fidMinus
+        btn4.when_pressed = self.submit
+        self.this_loop=Clock.schedule_interval(self.loop,0)
+    def fidPlus(self):
+        self.i+=1
+        self.ids['fID'].text=f"{self.i}"
+    def fidMinus(self):
+        self.i-=1
+        self.ids['fID'].text=f"{self.i}"
     def on_pre_leave(self):
         Clock.unschedule(self.this_loop)
         print('Leaving '+self.name)
@@ -142,25 +182,48 @@ class ExchangeScreen(MDScreen):
                 print(e)
                 cur.execute(f"DELETE FROM  exchange  WHERE book_id={self.ids['bookID'].text} AND std_id={self.ids['stdID'].text} AND status=1")
         con.commit()
+    def get_id(self):
+        rawCapture.truncate(0)
+        camera.capture(rawCapture, format="rgb",use_video_port=True)       
+        x=500
+        y=400
+        pi_image = rawCapture.array[x: x+300, y: y+600]
+        
+        idimg = cv2.cvtColor(pi_image, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite('idimg2.jpg',idimg)
+        try:
+            text = pytesseract.image_to_string(idimg)
+            num=re.findall(r'\d+', text)
+            self.ids['stdID'].text=num[0]
+        except:
+            pass
     def loop(self,dt):
-        ret, frame = self.cap.read()
-        frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-        book_id=qr.scan(frame)
-        if book_id:
-            print(book_id)
-        # if self.stage==0:
-        #     id=(pytesseract.image_to_string(frame))
-        #     print(id)
-        #     if id=='A':
-        #         self.stage+=1
-        # elif self.stage==1:
-        #     my_app.screen_manager.current='home_screen'
-        # Preview
-        frame = cv2.flip(frame,-1)
-        buf=frame.tobytes()
-        image_texture= Texture.create(size=(frame.shape[1],frame.shape[0]),colorfmt='rgb')
+        rawCapture.truncate(0)
+        camera.capture(rawCapture, format="rgb",use_video_port=True)
+        x=500
+        y=400
+        pi_image = rawCapture.array[x: x+300, y: y+600]
+        pi_image = cv2.rotate(pi_image, cv2.ROTATE_180)
+        pi_image = cv2.flip(pi_image, 1)
+        buf=pi_image.tostring()
+        image_texture= Texture.create(size=(pi_image.shape[1],pi_image.shape[0]),colorfmt='rgb')
         image_texture.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
         self.ids['preview'].texture =image_texture
+        ####################
+#         ret, frame = self.cap.read()
+#         cv2.imwrite('image.png',frame)
+#         #frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+#         book_id=qr.scan(frame)
+#         if book_id:
+#             print(book_id)
+        ##################
+        #############
+#         frame = cv2.flip(frame,-1)
+#         buf=frame.tobytes()
+#         image_texture= Texture.create(size=(frame.shape[1],frame.shape[0]),colorfmt='rgb')
+#         image_texture.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
+#         self.ids['preview'].texture =image_texture
+        #############
 
 class BookListScreen(MDScreen):
     def __init__(self, **kwargs):
@@ -327,6 +390,10 @@ class ListSelectScreen(MDScreen):
         
     def on_enter(self):
         print('Entered '+self.name)
+        btn1.when_pressed = self.back
+        btn2.when_pressed = self.go_book_screen
+        btn3.when_pressed = self.go_student_screen
+        btn4.when_pressed = self.go_exchange_list_screen
         self.this_loop=Clock.schedule_interval(self.loop,0)
     def back(self):
         my_app.screen_manager.current='home_screen'
