@@ -68,27 +68,51 @@
                 font_style: 'H3'
                 size_hint_y:.3
                 halign: "center"
+            MDLabel:
+                id: instruction
+                theme_text_color: "Custom"
+                text_color: 1, 0, 0, 1
+                text: "instruction"
+                font_style: 'H4'
+                size_hint_y:.2
+                halign: "center"
             # MDLabel:
             #     text: "Student ID"
             #     halign: "left"
             #     size_hint_y:.1
-            MDTextField:
-                id: stdName
-                hint_text: "Student Name"
-                font_size: "36sp"
-            MDTextField:
-                id: stdID
-                hint_text: "Student ID"
-                font_size: "36sp"
-            MDTextField:
-                id: fID
-                hint_text: "Finger Print ID"
-                font_size: "36sp"
+            MDGridLayout:
+                cols: 2
+                spacing: dp(10)
+                padding: (10,10)
+                MDGridLayout:
+                    cols: 1
+                    spacing: dp(10)
+                    padding: (10,10)
+                    MDTextField:
+                        id: stdName
+                        hint_text: "Student Name"
+                        font_size: "36sp"
+                    MDTextField:
+                        id: stdID
+                        hint_text: "Student ID"
+                        font_size: "36sp"
+                    MDTextField:
+                        id: fID
+                        hint_text: "Finger Print ID"
+                        font_size: "36sp"
+                MDGridLayout:
+                    cols: 1
+                    spacing: dp(10)
+                    padding: (10,10)
+                    Image:
+                        id: preview
+                        source: ''
+                        allow_stretch: True
             MDGridLayout:
                 cols: 4
                 spacing: dp(10)
                 padding: (10,10)
-                size_hint_y:.1
+                size_hint_y:.3
                 MDRaisedButton:
                     text: 'Back'
                     font_size: "36sp"
@@ -160,18 +184,29 @@
                         source: ''
                         allow_stretch: True
             MDGridLayout:
-                cols: 1
+                cols: 4
                 spacing: dp(10)
+                size_hint_y:.2
+                MDRaisedButton:
+                    text: 'Back'
+                    font_size: "36sp"
+                    size_hint: 1,0.2
+                    on_release: root.back()
+                MDRaisedButton:
+                    text: 'Scan StdID'
+                    font_size: "36sp"
+                    size_hint: 1,0.2
+                    on_release: root.get_id()
+                MDRaisedButton:
+                    text: 'Scan Book'
+                    font_size: "36sp"
+                    size_hint: 1,0.2
+                    on_release: root.get_id()
                 MDRaisedButton:
                     text: 'Submit'
                     font_size: "36sp"
                     size_hint: 1,0.2
                     on_release: root.submit()
-                MDRaisedButton:
-                    text: 'Get StdID'
-                    font_size: "36sp"
-                    size_hint: 1,0.2
-                    on_release: root.get_id()
 <BookListScreen>:
     GridLayout:
         cols: 1
@@ -251,11 +286,11 @@
                 # size_hint_y:.1
                 halign: "center"
             GridLayout:
-                cols:3
+                cols:4
                 spacing: dp(10)
                 size_hint_y: 0.1
                 MDRaisedButton:
-                    text: 'BookList'
+                    text: 'Back'
                     font_size: "36sp"
                     size_hint: 1, 1
                     on_release: root.back()

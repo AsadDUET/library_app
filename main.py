@@ -18,6 +18,7 @@ from picamera import PiCamera
 import re
 from gpiozero import Button
 from signal import pause
+import scan_qr as qr
 
 Window.size = (800, 480)
 Window.fullscreen=True
@@ -32,9 +33,6 @@ import pytesseract
 ######
 import sqlite3
 con = sqlite3.connect('library_data.db')
-import scan_qr as qr
-# import sqlite3
-# con = sqlite3.connect('library_data.db')
 cur = con.cursor()
 
 # cur.execute('''DROP TABLE exchange''')
@@ -59,6 +57,19 @@ camera.rotation = 90
 camera.framerate = 32
 rawCapture = PiRGBArray(camera, size=(1024, 1024))
 rawCapture.truncate()
+############
+## Finger print
+############
+from pyfingerprint.pyfingerprint import PyFingerprint
+try:
+    f = PyFingerprint('/dev/ttyUSB0', 57600, 0xFFFFFFFF, 0x00000000)
+    print("ok")
+    if ( f.verifyPassword() == False ):
+        raise ValueError('The given fingerprint sensor password is wrong!')
+
+except Exception as e:
+    print('The fingerprint sensor could not be initialized!')
+    print('Exception message: ' + str(e))
 
 #########
 # Globa Variables
@@ -101,26 +112,25 @@ class HomeScreen(MDScreen):
 
     def loop(self,dt):
         pass
-    
-    
-    
 
-    
-    # pause()
-    
-        
 class EnroleScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name='enrole_screen'
         self.i=0
+        
     
     def on_enter(self):
+        f.clearDatabase()
         print('Entered '+self.name)
         btn1.when_pressed = self.back
         btn2.when_pressed = self.fidPlus
         btn3.when_pressed = self.fidMinus
         btn4.when_pressed = self.submit
+        self.state=0
+        self.positionNumber=-1
+        self.ids['fID'].text=""
+        self.pi_image=None
         self.this_loop=Clock.schedule_interval(self.loop,0)
     def fidPlus(self):
         self.i+=1
@@ -134,17 +144,85 @@ class EnroleScreen(MDScreen):
     def back(self):
         my_app.screen_manager.current='home_screen'
     def submit(self):
+        print("submitting")
+        rawCapture.truncate(0)
+        # camera.capture(rawCapture, format="rgb",use_video_port=True)       
+        x=500
+        y=400
+        self.pi_image = rawCapture.array[x: x+300, y: y+600]
+        
+        idimg = cv2.cvtColor(self.pi_image, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite('idimg2.jpg',idimg)
+        try:
+            text = pytesseract.image_to_string(idimg)
+            num=re.findall(r'\d+', text)
+            self.ids['stdID'].text=num[0]
+        except:
+            self.ids['stdID'].text=""
+
         if(self.ids['fID'].text!="" and self.ids['stdID'].text!=""):
+            f.createTemplate()
+            self.positionNumber = f.storeTemplate(self.i)
             try:
+                con = sqlite3.connect('library_data.db')
+                cur = con.cursor()
                 cur.execute(f"INSERT INTO users VALUES ('{self.ids['stdName'].text}','{self.ids['fID'].text}','{self.ids['stdID'].text}')")
                 con.commit()
+                con.close()
+                self.ids['instruction'].text="Done"
             except Exception as e:
                 print(e," User id already exists. ",)
+                self.ids['instruction'].text="DB Error"
+            
         else:
-            pass
-        
+            self.ids['instruction'].text="set finger ID and place ID then submit "
+        print("submited")
+
     def loop(self,dt):
-        pass
+        if self.state==0:
+            self.ids['instruction'].text="Please Scan Finger"
+            if (f.readImage() == True):
+                f.readImage()
+                f.convertImage(0x01)
+                result = f.searchTemplate()
+                self.positionNumber = result[0]
+                self.state+=1
+        if self.state==1:
+            if ( self.positionNumber >= 0 ):
+                self.ids['instruction'].text=('Template already exists at position #' + str(self.positionNumber))
+                if (f.readImage() == False):
+                    self.state-=1
+            else:
+                self.ids['instruction'].text=('Remove finger...')
+                if (f.readImage() == False):
+                    self.state+=1
+        if self.state==2:
+            self.ids['instruction'].text=('Waiting for same finger again...')
+            if ( f.readImage() == True ):
+                f.readImage()
+                f.convertImage(0x02)
+                self.state+=1
+        if self.state==3:
+            if ( f.compareCharacteristics() == 0 ):
+                self.ids['instruction'].text=('Fingers do not match')
+                if (f.readImage() == False):
+                    self.state=0
+            else:
+                self.ids['instruction'].text=('Finger matched')
+                if (f.readImage() == False):
+                    self.state+=1
+        if self.state==4:
+            rawCapture.truncate(0)
+            camera.capture(rawCapture, format="rgb",use_video_port=True)
+            x=500
+            y=400
+            self.pi_image = rawCapture.array[x: x+300, y: y+600]
+            self.pi_image = cv2.rotate(self.pi_image, cv2.ROTATE_180)
+            self.pi_image = cv2.flip(self.pi_image, 1)
+            buf=self.pi_image.tostring()
+            image_texture= Texture.create(size=(self.pi_image.shape[1],self.pi_image.shape[0]),colorfmt='rgb')
+            image_texture.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
+            self.ids['preview'].texture =image_texture
 
 class ExchangeScreen(MDScreen):
     def __init__(self, **kwargs):
@@ -255,7 +333,7 @@ class BookListScreen(MDScreen):
                                     column_data=[
                                         ("No.", dp(15)),
                                         ("Name", dp(50)),
-                                        ("ID", dp(20)),
+                                        ("Book ID", dp(20)),
                                         ("Borrowed", dp(20)),
                                         ("Available", dp(20)),
                                         ("Total", dp(20))
@@ -309,7 +387,7 @@ class StudentListScreen(MDScreen):
                                     column_data=[
                                         ("No.", dp(15)),
                                         ("Name", dp(50)),
-                                        ("ID", dp(20)),
+                                        ("StdID", dp(20)),
                                         ("Borrowed", dp(20))
                                     ],
                                     row_data=row_datas
