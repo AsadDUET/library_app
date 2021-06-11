@@ -1,15 +1,10 @@
-from time import sleep
+
 from kivymd.app import MDApp
 from kivymd.uix.screen import MDScreen
 from kivy.uix.screenmanager import ScreenManager
 from kivy.clock import Clock
 from kivy.graphics.texture import Texture
 from kivymd.uix.datatables import MDDataTable
-from kivymd.uix.button import MDRectangleFlatButton
-from kivy.uix.scrollview import ScrollView
-from kivymd.uix.list import MDList
-from kivymd.uix.gridlayout import GridLayout
-from kivymd.uix.label import MDLabel
 from kivy.metrics import dp
 from kivy.core.window import Window
 from datetime import datetime
@@ -17,7 +12,6 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 import re
 from gpiozero import Button
-from signal import pause
 import scan_qr as qr
 
 Window.size = (800, 480)
@@ -104,7 +98,7 @@ class HomeScreen(MDScreen):
         print('Leaving '+self.name)
 
     def go_enrole_screen(self):
-        my_app.screen_manager.current='enrole_screen'
+        my_app.screen_manager.current='enrole_select_screen'
 
     def go_exchange_screen(self):
         my_app.screen_manager.current='exchange_screen'
@@ -144,7 +138,7 @@ class EnroleScreen(MDScreen):
         Clock.unschedule(self.this_loop)
         print('Leaving '+self.name)
     def back(self):
-        my_app.screen_manager.current='home_screen'
+        my_app.screen_manager.current='enrole_select_screen'
     def submit(self):
         print("submitting")
         self.ids['instruction'].text="Submitting"
@@ -186,37 +180,49 @@ class EnroleScreen(MDScreen):
         self.state=0
     def loop(self,dt):
         if self.state==0:
-            self.ids['instruction'].text="Please Scan Finger"
-            if (f.readImage() == True):
-                f.readImage()
-                f.convertImage(0x01)
-                result = f.searchTemplate()
-                self.positionNumber = result[0]
-                self.state+=1
+            try:
+                self.ids['instruction'].text="Please Scan Finger"
+                if (f.readImage() == True):
+                    f.readImage()
+                    f.convertImage(0x01)
+                    result = f.searchTemplate()
+                    self.positionNumber = result[0]
+                    self.state+=1
+            except:
+                pass
         if self.state==1:
-            if ( self.positionNumber >= 0 ):
-                self.ids['instruction'].text=('Template already exists at position #' + str(self.positionNumber))
-                if (f.readImage() == False):
-                    self.state-=1
-            else:
-                self.ids['instruction'].text=('Remove finger...')
-                if (f.readImage() == False):
-                    self.state+=1
+            try:
+                if ( self.positionNumber >= 0 ):
+                    self.ids['instruction'].text=('Template already exists at position #' + str(self.positionNumber))
+                    if (f.readImage() == False):
+                        self.state-=1
+                else:
+                    self.ids['instruction'].text=('Remove finger...')
+                    if (f.readImage() == False):
+                        self.state+=1
+            except:
+                pass
         if self.state==2:
-            self.ids['instruction'].text=('Waiting for same finger again...')
-            if ( f.readImage() == True ):
-                f.readImage()
-                f.convertImage(0x02)
-                self.state+=1
-        if self.state==3:
-            if ( f.compareCharacteristics() == 0 ):
-                self.ids['instruction'].text=('Fingers do not match')
-                if (f.readImage() == False):
-                    self.state=0
-            else:
-                self.ids['instruction'].text=('Finger matched')
-                if (f.readImage() == False):
+            try:
+                self.ids['instruction'].text=('Waiting for same finger again...')
+                if ( f.readImage() == True ):
+                    f.readImage()
+                    f.convertImage(0x02)
                     self.state+=1
+            except:
+                pass
+        if self.state==3:
+            try:
+                if ( f.compareCharacteristics() == 0 ):
+                    self.ids['instruction'].text=('Fingers do not match')
+                    if (f.readImage() == False):
+                        self.state=0
+                else:
+                    self.ids['instruction'].text=('Finger matched')
+                    if (f.readImage() == False):
+                        self.state+=1
+            except:
+                pass
         if self.state==4:
             rawCapture.truncate(0)
             camera.capture(rawCapture, format="rgb",use_video_port=True)
@@ -274,7 +280,7 @@ class ExchangeScreen(MDScreen):
         self.ids['stdID'].text=""
         self.ids['bookID'].text=""
         self.pi_image=None
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(1)
         # self.cap.set(3,400)
         # self.cap.set(4,400)
         if not self.cap.isOpened():
@@ -311,23 +317,29 @@ class ExchangeScreen(MDScreen):
     
     def loop(self,dt):
         if self.state==0:
-            self.ids['instruction'].text="Please Scan Finger"
-            if (f.readImage() == True):
-                f.readImage()
-                f.convertImage(0x01)
-                result = f.searchTemplate()
-                self.positionNumber = result[0]
-                self.state+=1
-        if self.state==1:
-            if ( self.positionNumber >= 0 ):
-                self.ids['instruction'].text=('Match found at ID #' + str(self.positionNumber))
-                self.ids['fID'].text=str(self.positionNumber)
-                if (f.readImage() == False):
+            try:
+                self.ids['instruction'].text="Please Scan Finger"
+                if (f.readImage() == True):
+                    f.readImage()
+                    f.convertImage(0x01)
+                    result = f.searchTemplate()
+                    self.positionNumber = result[0]
                     self.state+=1
-            else:
-                self.ids['instruction'].text=('No Match. Remove finger...')
-                if (f.readImage() == False):
-                    self.state=0
+            except:
+                pass
+        if self.state==1:
+            try:
+                if ( self.positionNumber >= 0 ):
+                    self.ids['instruction'].text=('Match found at ID #' + str(self.positionNumber))
+                    self.ids['fID'].text=str(self.positionNumber)
+                    if (f.readImage() == False):
+                        self.state+=1
+                else:
+                    self.ids['instruction'].text=('No Match. Remove finger...')
+                    if (f.readImage() == False):
+                        self.state=0
+            except:
+                pass
         
         if self.state==2:
             rawCapture.truncate(0)
@@ -357,6 +369,92 @@ class ExchangeScreen(MDScreen):
             self.ids['preview'].texture =image_texture2
         #############
 
+class BookAddScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.name='book_add_screen'
+        self.state=0
+        
+    def scan_book(self):
+        self.ids['instruction'].text="Scaning Book"
+        ret, frame = self.cap.read()
+        cv2.imwrite('image.png',frame)
+        #frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+        book_id=qr.scan(frame)
+        if book_id:
+            print(book_id)
+            self.ids['bookID'].text=str(book_id)
+            self.ids['instruction'].text="Scaning done"
+        else:
+            self.ids['instruction'].text="Scaning fail"
+    
+    def on_enter(self):
+        print('Entered '+self.name)
+        btn1.when_pressed = self.back
+        btn2.when_pressed = None
+        btn3.when_pressed = self.scan_book
+        btn4.when_pressed = self.submit
+        self.state=0
+        self.positionNumber=-1
+        self.ids['quantity'].text=""
+        self.ids['bookTitle'].text=""
+        self.ids['bookID'].text=""
+        self.cap = cv2.VideoCapture(1)
+        # self.cap.set(3,400)
+        # self.cap.set(4,400)
+        if not self.cap.isOpened():
+            print("Cannot open webcam")
+        else:
+            print("cam Found")
+        self.this_loop=Clock.schedule_interval(self.loop,0)
+    def back(self):
+        my_app.screen_manager.current='enrole_select_screen'
+    def on_pre_leave(self):
+        Clock.unschedule(self.this_loop)
+        self.cap.release()
+        print('Leaving '+self.name)
+    def submit(self):
+        con = sqlite3.connect('library_data.db')
+        cur = con.cursor()
+        try:
+            cur.execute(f"INSERT INTO books VALUES ('{self.ids['bookTitle'].text}','{self.ids['bookID'].text}',{self.ids['quantity'].text})")
+        except Exception as e:
+            print(e, "Same book Registered")
+        con.commit()
+        con.close()
+        self.ids['bookID'].text=''
+        self.ids['bookTitle'].text=''
+        self.ids['quantity'].text=''
+        self.state=0
+    
+    def loop(self,dt):
+        try:
+        ####################
+            ret, frame = self.cap.read()
+            # cv2.imwrite('image.png',frame)
+            # #frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+            # book_id=qr.scan(frame)
+            # if book_id:
+            #     print(book_id)
+        ##################
+        #############
+            frame = cv2.flip(frame,-1)
+            buf=frame.tobytes()
+            image_texture2= Texture.create(size=(frame.shape[1],frame.shape[0]),colorfmt='rgb')
+            image_texture2.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
+            self.ids['preview'].texture =image_texture2
+            book_id=qr.scan(frame)
+            if book_id:
+                print(book_id)
+                self.ids['bookID'].text=str(book_id)
+                self.ids['bookTitle'].text=str(book_id)
+                self.ids['instruction'].text="Scaning done"
+            else:
+                self.ids['instruction'].text="Scaning fail"
+        #############
+        except:
+            pass
+
 class BookListScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -379,7 +477,8 @@ class BookListScreen(MDScreen):
                 book_ids.append(row[1])
             print(book_ids)
             for id in book_ids:
-                borrowed.append(cur.execute(f'SELECT COUNT(*) FROM exchange WHERE book_id={id} AND status=1').fetchall()[0][0])
+                print(id)
+                borrowed.append(cur.execute(f'SELECT COUNT(*) FROM exchange WHERE book_id="{id}" AND status=1').fetchall()[0][0])
             print(borrowed)
             print("Name","ID", "Borrowed","Available","Total")
             for n, row in enumerate(cur.execute('SELECT * FROM books ')):
@@ -573,6 +672,31 @@ class ListSelectScreen(MDScreen):
         # sleep(5)
         # self.back()
 
+class EnroleSelectScreen(MDScreen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.name='enrole_select_screen'
+        
+    def on_enter(self):
+        print('Entered '+self.name)
+        btn1.when_pressed = self.back
+        btn2.when_pressed = self.go_enrole_screen
+        btn3.when_pressed = self.go_book_add_screen
+        btn4.when_pressed = None
+        self.this_loop=Clock.schedule_interval(self.loop,0)
+    def back(self):
+        my_app.screen_manager.current='home_screen'
+    def on_pre_leave(self):
+        Clock.unschedule(self.this_loop)
+        print('Leaving '+self.name)
+    def go_enrole_screen(self):
+        my_app.screen_manager.current='enrole_screen'
+    def go_book_add_screen(self):
+        my_app.screen_manager.current='book_add_screen'
+    # def go_exchange_list_screen(self):
+    #     my_app.screen_manager.current='exchange_list_screen'
+    def loop(self,dt):
+        pass
 class LibraryApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -601,8 +725,12 @@ class LibraryApp(MDApp):
 
         self.exchange_select_screen = ExchangeListScreen()
         self.screen_manager.add_widget(self.exchange_select_screen)
+        
+        self.enrole_select_screen = EnroleSelectScreen()
+        self.screen_manager.add_widget(self.enrole_select_screen)
 
-
+        self.book_add_screen = BookAddScreen()
+        self.screen_manager.add_widget(self.book_add_screen)
         # self.atd_complete_page = AtdCompletePage()
         # self.screen_manager.add_widget(self.atd_complete_page)
 

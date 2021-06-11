@@ -226,6 +226,90 @@
                     font_size: "36sp"
                     size_hint: 1,0.2
                     on_release: root.submit()
+
+<BookAddScreen>:
+    MDGridLayout:
+        cols: 1
+        spacing: dp(10)
+        MDToolbar:
+            id: toolbar
+            title: ''
+            height: dp(30)
+            # md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+            left_action_items: [["arrow-left", lambda x: root.back()]]
+            pos_hint: {"top": 1}
+        MDGridLayout:
+            cols: 1
+            spacing: dp(10)
+            padding: (10,10)
+            MDLabel:
+                text: "Submit after complete"
+                font_style: 'H3'
+                size_hint_y:.3
+                halign: "center"
+            MDLabel:
+                id: instruction
+                theme_text_color: "Custom"
+                text_color: 1, 0, 0, 1
+                text: "instruction"
+                font_style: 'H4'
+                size_hint_y:.2
+                halign: "center"
+            MDGridLayout:
+                cols: 2
+                spacing: dp(10)
+                padding: (10,10)
+                MDGridLayout:
+                    cols: 1
+                    spacing: dp(10)
+                    MDTextField:
+                        id: bookTitle
+                        hint_text: "Book Title"
+                        font_size: "36sp"
+                    MDTextField:
+                        id: bookID
+                        hint_text: "Book ID"
+                        font_size: "36sp"
+                    MDTextField:
+                        id: quantity
+                        hint_text: "Quantity"
+                        font_size: "36sp"
+                MDGridLayout:
+                    cols: 1
+                    spacing: dp(10)
+                    Image:
+                        id: preview
+                        source: ''
+                        allow_stretch: True
+                    Image:
+                        id: preview2
+                        source: ''
+                        allow_stretch: True
+            MDGridLayout:
+                cols: 4
+                spacing: dp(10)
+                size_hint_y:.2
+                MDRaisedButton:
+                    text: 'Back'
+                    font_size: "36sp"
+                    size_hint: 1,0.2
+                    on_release: root.back()
+                MDRaisedButton:
+                    text: ' '
+                    font_size: "36sp"
+                    size_hint: 1,0.2
+                    # on_release: root.scan_id()
+                MDRaisedButton:
+                    text: 'Scan Book'
+                    font_size: "36sp"
+                    size_hint: 1,0.2
+                    on_release: root.scan_book()
+                MDRaisedButton:
+                    text: 'Submit'
+                    font_size: "36sp"
+                    size_hint: 1,0.2
+                    on_release: root.submit()
 <BookListScreen>:
     GridLayout:
         cols: 1
@@ -328,3 +412,49 @@
                     font_size: "36sp"
                     size_hint: 1, 1
                     on_release: root.go_exchange_list_screen()
+
+
+
+<EnroleSelectScreen>:
+    GridLayout:
+        cols: 1
+        MDToolbar:
+            id: toolbar
+            title: ''
+            height: dp(30)
+            # md_bg_color: app.theme_cls.primary_color
+            elevation: 10
+            left_action_items: [["arrow-left", lambda x: root.back()]]
+            pos_hint: {"top": 1}
+        GridLayout:
+            cols: 1
+            padding: (10,10)
+            MDLabel:
+                text: "Select List"
+                font_style: 'H3'
+                # size_hint_y:.1
+                halign: "center"
+            GridLayout:
+                cols:4
+                spacing: dp(10)
+                size_hint_y: 0.1
+                MDRaisedButton:
+                    text: 'Back'
+                    font_size: "36sp"
+                    size_hint: 1, 1
+                    on_release: root.back()
+                MDRaisedButton:
+                    text: 'Add Book'
+                    font_size: "36sp"
+                    size_hint: 1, 1
+                    on_release: root.go_book_add_screen()
+                MDRaisedButton:
+                    text: 'Add Student'
+                    font_size: "34sp"
+                    size_hint: 1, 1
+                    on_release: root.go_enrole_screen()
+                MDRaisedButton:
+                    text: ''
+                    font_size: "36sp"
+                    size_hint: 1, 1
+                    # on_release: root.go_exchange_list_screen()
