@@ -108,6 +108,13 @@
                         id: preview
                         source: ''
                         allow_stretch: True
+            MDRaisedButton:
+                text: 'Clear finger database'
+                font_size: "36sp"
+                size_hint_y: .3
+                size_hint_x: 1
+                # on_press: root.go_enrole_screen()
+                on_release: root.clear()
             MDGridLayout:
                 cols: 4
                 spacing: dp(10)
@@ -157,6 +164,14 @@
                 font_style: 'H3'
                 size_hint_y:.3
                 halign: "center"
+            MDLabel:
+                id: instruction
+                theme_text_color: "Custom"
+                text_color: 1, 0, 0, 1
+                text: "instruction"
+                font_style: 'H4'
+                size_hint_y:.2
+                halign: "center"
             MDGridLayout:
                 cols: 2
                 spacing: dp(10)
@@ -183,6 +198,10 @@
                         id: preview
                         source: ''
                         allow_stretch: True
+                    Image:
+                        id: preview2
+                        source: ''
+                        allow_stretch: True
             MDGridLayout:
                 cols: 4
                 spacing: dp(10)
@@ -196,12 +215,12 @@
                     text: 'Scan StdID'
                     font_size: "36sp"
                     size_hint: 1,0.2
-                    on_release: root.get_id()
+                    on_release: root.scan_id()
                 MDRaisedButton:
                     text: 'Scan Book'
                     font_size: "36sp"
                     size_hint: 1,0.2
-                    on_release: root.get_id()
+                    on_release: root.scan_book()
                 MDRaisedButton:
                     text: 'Submit'
                     font_size: "36sp"

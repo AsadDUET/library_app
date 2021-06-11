@@ -3,7 +3,8 @@ con = sqlite3.connect('library_data.db')
 
 cur = con.cursor()
 
-# cur.execute('''DROP TABLE exchange''')
+cur.execute('''DROP TABLE users''')
+cur.execute('''DROP TABLE exchange''')
 
 cur.execute('''CREATE TABLE IF NOT EXISTS users
                (name text, id text, stdid text PRIMARY KEY)''')

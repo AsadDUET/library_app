@@ -37,6 +37,8 @@ cur = con.cursor()
 
 # cur.execute('''DROP TABLE exchange''')
 
+
+
 cur.execute('''CREATE TABLE IF NOT EXISTS users
                (name text, id text, stdid text PRIMARY KEY)''')
 
@@ -118,10 +120,10 @@ class EnroleScreen(MDScreen):
         super().__init__(**kwargs)
         self.name='enrole_screen'
         self.i=0
-        
-    
-    def on_enter(self):
+    def clear(self):
         f.clearDatabase()
+
+    def on_enter(self):
         print('Entered '+self.name)
         btn1.when_pressed = self.back
         btn2.when_pressed = self.fidPlus
@@ -145,6 +147,7 @@ class EnroleScreen(MDScreen):
         my_app.screen_manager.current='home_screen'
     def submit(self):
         print("submitting")
+        self.ids['instruction'].text="Submitting"
         rawCapture.truncate(0)
         # camera.capture(rawCapture, format="rgb",use_video_port=True)       
         x=500
@@ -177,7 +180,10 @@ class EnroleScreen(MDScreen):
         else:
             self.ids['instruction'].text="set finger ID and place ID then submit "
         print("submited")
-
+        self.ids['stdName'].text=''
+        self.ids['stdID'].text=''
+        self.ids['fID'].text=''
+        self.state=0
     def loop(self,dt):
         if self.state==0:
             self.ids['instruction'].text="Please Scan Finger"
@@ -223,16 +229,51 @@ class EnroleScreen(MDScreen):
             image_texture= Texture.create(size=(self.pi_image.shape[1],self.pi_image.shape[0]),colorfmt='rgb')
             image_texture.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
             self.ids['preview'].texture =image_texture
+            rawCapture.truncate(0)
 
 class ExchangeScreen(MDScreen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name='exchange_screen'
-        self.stage=0
+        self.state=0
         
-    
+    def scan_book(self):
+        self.ids['instruction'].text="Scaning Book"
+        ret, frame = self.cap.read()
+        cv2.imwrite('image.png',frame)
+        #frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+        book_id=qr.scan(frame)
+        if book_id:
+            print(book_id)
+            self.ids['bookID'].text=str(book_id)
+    def scan_id(self):
+        self.ids['instruction'].text="Scaning ID"
+        rawCapture.truncate(0)
+        # camera.capture(rawCapture, format="rgb",use_video_port=True)       
+        x=500
+        y=400
+        self.pi_image = rawCapture.array[x: x+300, y: y+600]
+        
+        idimg = cv2.cvtColor(self.pi_image, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite('idimg2.jpg',idimg)
+        try:
+            text = pytesseract.image_to_string(idimg)
+            num=re.findall(r'\d+', text)
+            self.ids['stdID'].text=num[0]
+        except:
+            pass
     def on_enter(self):
         print('Entered '+self.name)
+        btn1.when_pressed = self.back
+        btn2.when_pressed = self.scan_id
+        btn3.when_pressed = self.scan_book
+        btn4.when_pressed = self.submit
+        self.state=0
+        self.positionNumber=-1
+        self.ids['fID'].text=""
+        self.ids['stdID'].text=""
+        self.ids['bookID'].text=""
+        self.pi_image=None
         self.cap = cv2.VideoCapture(0)
         # self.cap.set(3,400)
         # self.cap.set(4,400)
@@ -248,6 +289,8 @@ class ExchangeScreen(MDScreen):
         self.cap.release()
         print('Leaving '+self.name)
     def submit(self):
+        con = sqlite3.connect('library_data.db')
+        cur = con.cursor()
         try:
             cur.execute(f"INSERT INTO exchange VALUES ('{self.ids['bookID'].text}','{self.ids['stdID'].text}',1)")
         except Exception as e:
@@ -260,47 +303,58 @@ class ExchangeScreen(MDScreen):
                 print(e)
                 cur.execute(f"DELETE FROM  exchange  WHERE book_id={self.ids['bookID'].text} AND std_id={self.ids['stdID'].text} AND status=1")
         con.commit()
-    def get_id(self):
-        rawCapture.truncate(0)
-        camera.capture(rawCapture, format="rgb",use_video_port=True)       
-        x=500
-        y=400
-        pi_image = rawCapture.array[x: x+300, y: y+600]
-        
-        idimg = cv2.cvtColor(pi_image, cv2.COLOR_BGR2GRAY)
-        cv2.imwrite('idimg2.jpg',idimg)
-        try:
-            text = pytesseract.image_to_string(idimg)
-            num=re.findall(r'\d+', text)
-            self.ids['stdID'].text=num[0]
-        except:
-            pass
+        con.close()
+        self.ids['bookID'].text=''
+        self.ids['stdID'].text=''
+        self.ids['fID'].text=''
+        self.state=0
+    
     def loop(self,dt):
-        rawCapture.truncate(0)
-        camera.capture(rawCapture, format="rgb",use_video_port=True)
-        x=500
-        y=400
-        pi_image = rawCapture.array[x: x+300, y: y+600]
-        pi_image = cv2.rotate(pi_image, cv2.ROTATE_180)
-        pi_image = cv2.flip(pi_image, 1)
-        buf=pi_image.tostring()
-        image_texture= Texture.create(size=(pi_image.shape[1],pi_image.shape[0]),colorfmt='rgb')
-        image_texture.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
-        self.ids['preview'].texture =image_texture
+        if self.state==0:
+            self.ids['instruction'].text="Please Scan Finger"
+            if (f.readImage() == True):
+                f.readImage()
+                f.convertImage(0x01)
+                result = f.searchTemplate()
+                self.positionNumber = result[0]
+                self.state+=1
+        if self.state==1:
+            if ( self.positionNumber >= 0 ):
+                self.ids['instruction'].text=('Match found at ID #' + str(self.positionNumber))
+                self.ids['fID'].text=str(self.positionNumber)
+                if (f.readImage() == False):
+                    self.state+=1
+            else:
+                self.ids['instruction'].text=('No Match. Remove finger...')
+                if (f.readImage() == False):
+                    self.state=0
+        
+        if self.state==2:
+            rawCapture.truncate(0)
+            camera.capture(rawCapture, format="rgb",use_video_port=True)
+            x=500
+            y=400
+            self.pi_image = rawCapture.array[x: x+300, y: y+600]
+            self.pi_image = cv2.rotate(self.pi_image, cv2.ROTATE_180)
+            self.pi_image = cv2.flip(self.pi_image, 1)
+            buf=self.pi_image.tostring()
+            image_texture= Texture.create(size=(self.pi_image.shape[1],self.pi_image.shape[0]),colorfmt='rgb')
+            image_texture.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
+            self.ids['preview2'].texture =image_texture
         ####################
-#         ret, frame = self.cap.read()
-#         cv2.imwrite('image.png',frame)
-#         #frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-#         book_id=qr.scan(frame)
-#         if book_id:
-#             print(book_id)
+            ret, frame = self.cap.read()
+            # cv2.imwrite('image.png',frame)
+            # #frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+            # book_id=qr.scan(frame)
+            # if book_id:
+            #     print(book_id)
         ##################
         #############
-#         frame = cv2.flip(frame,-1)
-#         buf=frame.tobytes()
-#         image_texture= Texture.create(size=(frame.shape[1],frame.shape[0]),colorfmt='rgb')
-#         image_texture.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
-#         self.ids['preview'].texture =image_texture
+            frame = cv2.flip(frame,-1)
+            buf=frame.tobytes()
+            image_texture2= Texture.create(size=(frame.shape[1],frame.shape[0]),colorfmt='rgb')
+            image_texture2.blit_buffer(buf,colorfmt='rgb',bufferfmt='ubyte')
+            self.ids['preview'].texture =image_texture2
         #############
 
 class BookListScreen(MDScreen):
@@ -310,6 +364,12 @@ class BookListScreen(MDScreen):
         
     def on_enter(self):
         print('Entered '+self.name)
+        btn1.when_pressed = self.back
+        btn2.when_pressed = None
+        btn3.when_pressed = None
+        btn4.when_pressed = None
+        con = sqlite3.connect('library_data.db')
+        cur = con.cursor()
         self.this_loop=Clock.schedule_interval(self.loop,0)
         try:
             book_ids=[]
@@ -326,10 +386,11 @@ class BookListScreen(MDScreen):
                 row_datas.append((n+1,row[0],row[1], borrowed[n], row[2]-borrowed[n], row[2]))
                 print(n+1,row[0],row[1], borrowed[n], row[2]-borrowed[n], row[2])
             print(row_datas)
+            # if(len(row_datas)>0):
             self.data_table = MDDataTable(pos_hint={'center_x': 0.5, 'center_y': 0.5},
                                     size_hint=(0.9, 0.9),
                                     #  check=True,
-                                    rows_num=len(row_datas),
+                                    rows_num=max(len(row_datas),1),
                                     column_data=[
                                         ("No.", dp(15)),
                                         ("Name", dp(50)),
@@ -341,11 +402,13 @@ class BookListScreen(MDScreen):
                                     row_data=row_datas
                                     )
             self.ids["bookTable"].add_widget(self.data_table)
-            self.data_table.bind(on_row_press=self.back)
+            self.data_table.bind(on_row_press=self.call_back)
         except Exception as e:
             print(e, "Table or data Not Found")
-
-    def back(self,a,b):
+        con.close()
+    def call_back(self,a,b):
+        self.back()
+    def back(self):
         my_app.screen_manager.current='list_select_screen'
     def on_pre_leave(self):
         Clock.unschedule(self.this_loop)
@@ -364,6 +427,13 @@ class StudentListScreen(MDScreen):
         
     def on_enter(self):
         print('Entered '+self.name)
+        print('Entered '+self.name)
+        btn1.when_pressed = self.back
+        btn2.when_pressed = None
+        btn3.when_pressed = None
+        btn4.when_pressed = None
+        con = sqlite3.connect('library_data.db')
+        cur = con.cursor()
         self.this_loop=Clock.schedule_interval(self.loop,0)
         try:
             user_ids=[]
@@ -377,27 +447,31 @@ class StudentListScreen(MDScreen):
             print(borrowed)
             print("Name","ID", "Borrowed")
             for n, row in enumerate(cur.execute('SELECT * FROM users ')):
-                row_datas.append((n+1,row[0],row[1], borrowed[n]))
+                row_datas.append((n+1,row[0],row[2],row[1], borrowed[n]))
                 print(n+1,row[0],row[1], borrowed[n])
             print(row_datas)
+            # if(len(row_datas)>0):
             self.data_table = MDDataTable(pos_hint={'center_x': 0.5, 'center_y': 0.5},
                                     size_hint=(0.9, 0.9),
                                     #  check=True,
-                                    rows_num=len(row_datas),
+                                    rows_num=max(len(row_datas),1),
                                     column_data=[
                                         ("No.", dp(15)),
                                         ("Name", dp(50)),
                                         ("StdID", dp(20)),
+                                        ("FingerID", dp(20)),
                                         ("Borrowed", dp(20))
                                     ],
                                     row_data=row_datas
                                     )
             self.ids["bookTable"].add_widget(self.data_table)
-            self.data_table.bind(on_row_press=self.back)
+            self.data_table.bind(on_row_press=self.call_back)
         except Exception as e:
             print(e, "Table or data Not Found")
-            
-    def back(self,a,b):
+        con.close()  
+    def call_back(self,a,b):
+        self.back()
+    def back(self):
         my_app.screen_manager.current='list_select_screen'
     def on_pre_leave(self):
         Clock.unschedule(self.this_loop)
@@ -416,6 +490,13 @@ class ExchangeListScreen(MDScreen):
         
     def on_enter(self):
         print('Entered '+self.name)
+        print('Entered '+self.name)
+        btn1.when_pressed = self.back
+        btn2.when_pressed = None
+        btn3.when_pressed = None
+        btn4.when_pressed = None
+        con = sqlite3.connect('library_data.db')
+        cur = con.cursor()
         self.this_loop=Clock.schedule_interval(self.loop,0)
         try:
             # book_ids=[]
@@ -432,10 +513,11 @@ class ExchangeListScreen(MDScreen):
                 row_datas.append((n+1,row[0],row[1], row[2]))
                 print(n+1,row[0],row[1], row[2])
             print(row_datas)
+            # if(len(row_datas)>0):
             self.data_table = MDDataTable(pos_hint={'center_x': 0.5, 'center_y': 0.5},
                                     size_hint=(0.9, 0.9),
                                     #  check=True,
-                                    rows_num=len(row_datas),
+                                    rows_num=max(len(row_datas),1),
                                     column_data=[
                                         ("No.", dp(15)),
                                         ("Book ID", dp(50)),
@@ -445,11 +527,13 @@ class ExchangeListScreen(MDScreen):
                                     row_data=row_datas
                                     )
             self.ids["bookTable"].add_widget(self.data_table)
-            self.data_table.bind(on_row_press=self.back)
+            self.data_table.bind(on_row_press=self.call_back)
         except Exception as e:
             print(e, "Table or data Not Found")
-            
-    def back(self,a,b):
+        con.close()  
+    def call_back(self,a,b):
+        self.back()
+    def back(self):
         my_app.screen_manager.current='list_select_screen'
     def on_pre_leave(self):
         Clock.unschedule(self.this_loop)
