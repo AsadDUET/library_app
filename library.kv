@@ -66,7 +66,7 @@
             MDLabel:
                 text: "Student Enrole"
                 font_style: 'H3'
-                size_hint_y:.3
+                size_hint_y:.2
                 halign: "center"
             MDLabel:
                 id: instruction
@@ -86,20 +86,20 @@
                 padding: (10,10)
                 MDGridLayout:
                     cols: 1
-                    spacing: dp(10)
+                    # spacing: dp(10)
                     padding: (10,10)
                     MDTextField:
                         id: stdName
                         hint_text: "Student Name"
-                        font_size: "36sp"
+                        font_size: "30sp"
                     MDTextField:
                         id: stdID
                         hint_text: "Student ID"
-                        font_size: "36sp"
+                        font_size: "30sp"
                     MDTextField:
                         id: fID
                         hint_text: "Finger Print ID"
-                        font_size: "36sp"
+                        font_size: "30sp"
                 MDGridLayout:
                     cols: 1
                     spacing: dp(10)
@@ -111,7 +111,7 @@
             MDRaisedButton:
                 text: 'Clear finger database'
                 font_size: "36sp"
-                size_hint_y: .3
+                size_hint_y: .2
                 size_hint_x: 1
                 # on_press: root.go_enrole_screen()
                 on_release: root.clear()

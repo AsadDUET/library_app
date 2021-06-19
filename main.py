@@ -15,7 +15,7 @@ from gpiozero import Button
 import scan_qr as qr
 
 Window.size = (800, 480)
-Window.fullscreen=True
+# Window.fullscreen=True
 ######
 # OCR
 ######
@@ -116,6 +116,10 @@ class EnroleScreen(MDScreen):
         self.i=0
     def clear(self):
         f.clearDatabase()
+        cur = con.cursor()
+        cur.execute('''DROP TABLE users''')
+        cur.execute('''DROP TABLE exchange''')
+        con.commit()
 
     def on_enter(self):
         print('Entered '+self.name)
@@ -304,10 +308,10 @@ class ExchangeScreen(MDScreen):
 
             ##UPDATE exchange
             try:
-                cur.execute(f"UPDATE exchange SET status=0 WHERE book_id={self.ids['bookID'].text} AND std_id={self.ids['stdID'].text}")
+                cur.execute(f"UPDATE exchange SET status=0 WHERE book_id='{self.ids['bookID'].text}' AND std_id='{self.ids['stdID'].text}'")
             except Exception as e:
                 print(e)
-                cur.execute(f"DELETE FROM  exchange  WHERE book_id={self.ids['bookID'].text} AND std_id={self.ids['stdID'].text} AND status=1")
+                cur.execute(f"DELETE FROM  exchange  WHERE book_id='{self.ids['bookID'].text}' AND std_id='{self.ids['stdID'].text}' AND status=1")
         con.commit()
         con.close()
         self.ids['bookID'].text=''
@@ -680,8 +684,8 @@ class EnroleSelectScreen(MDScreen):
     def on_enter(self):
         print('Entered '+self.name)
         btn1.when_pressed = self.back
-        btn2.when_pressed = self.go_enrole_screen
-        btn3.when_pressed = self.go_book_add_screen
+        btn2.when_pressed = self.go_book_add_screen
+        btn3.when_pressed = self.go_enrole_screen
         btn4.when_pressed = None
         self.this_loop=Clock.schedule_interval(self.loop,0)
     def back(self):
